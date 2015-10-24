@@ -1,0 +1,5 @@
+stream:
+  build: stream
+
+stash:
+  build: stash
