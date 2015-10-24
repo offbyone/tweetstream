@@ -1,13 +1,15 @@
 #!/usr/bin/env python
+import os
 import sys
 import encoding_fix
 import tweepy
-from twitter_authentication import CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET
 
-auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
-auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
+from twitter_authentication import CONSUMER_KEY, ACCESS_TOKEN
 
-api = tweepy.API(auth)
+def auth(consumer_secret, access_token_secret):
+    auth = tweepy.OAuthHandler(CONSUMER_KEY, consumer_secret)
+    auth.set_access_token(ACCESS_TOKEN, access_token_secret)
+    return auth
 
 class StreamListener(tweepy.StreamListener):
     def on_status(self, tweet):
@@ -27,14 +29,23 @@ class StreamListener(tweepy.StreamListener):
         return False
 
 
-while 1:
-    try:
-        l = StreamListener()
-        streamer = tweepy.Stream(auth=auth, listener=l)
+def main():
+    consumer_secret, access_token_secret = os.environ['CONSUMER_SECRET'], os.environ['ACCESS_TOKEN_SECRET']
+    api_auth = auth(consumer_secret, access_token_secret)
+    while 1:
+        try:
+            l = StreamListener()
+            streamer = tweepy.Stream(auth=api_auth, listener=l)
 
-        keywords = ['cubs']
-        streamer.filter(track = keywords)
-    except (KeyboardInterrupt, SystemExit):
-        raise
-    except Exception as e:
-        print("Error: {}".format(e))
+            keywords = ['cubs']
+            streamer.filter(track = keywords)
+        except KeyboardInterrupt:
+            print("Exit requested")
+            sys.exit(0)
+        except SystemExit:
+            raise
+        except Exception as e:
+            print("Error: {}".format(e))
+
+if __name__ == "__main__":
+    main()
