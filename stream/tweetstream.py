@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import os
 import sys
 import encoding_fix
@@ -12,8 +12,15 @@ def auth(consumer_secret, access_token_secret):
     return auth
 
 class StreamListener(tweepy.StreamListener):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.sent = 0
+
     def on_status(self, tweet):
         print(tweet._json)
+        self.sent += 1
+        if self.sent % 10 == 1:
+            print("Emitted {} tweets total".format(self.sent), file=sys.stderr)
 
     def on_error(self, status_code):
         print( 'Error: ' + repr(status_code))
@@ -23,7 +30,7 @@ class StreamListener(tweepy.StreamListener):
             print("Backing off.")
             time.sleep(60 * 2) # sleep for 2 mins.
         elif 400 <= status_code < 500:
-            print("Bailing due to {}".format(status_code))
+            print("Bailing due to {}".format(status_code), file=sys.stderr)
             sys.exit(1)
 
         return False
@@ -32,20 +39,27 @@ class StreamListener(tweepy.StreamListener):
 def main():
     consumer_secret, access_token_secret = os.environ['CONSUMER_SECRET'], os.environ['ACCESS_TOKEN_SECRET']
     api_auth = auth(consumer_secret, access_token_secret)
+    keywords = os.environ.get("TRACK_KEYWORDS", "rossi").split(",")
+    print("Tracking keywords: {}".format(keywords), file=sys.stderr)
     while 1:
         try:
             l = StreamListener()
+            print("Starting to listen using {}:{}".format(l, api_auth), file=sys.stderr)
             streamer = tweepy.Stream(auth=api_auth, listener=l)
-
-            keywords = ['cubs']
             streamer.filter(track = keywords)
         except KeyboardInterrupt:
-            print("Exit requested")
+            print("Exit requested", file=sys.stderr)
             sys.exit(0)
         except SystemExit:
             raise
+        except IOError as e:
+            if e.errno == errno.EPIPE:
+                # EPIPE error
+                raise
+            else:
+                print("IOError: {}".format(e), file=sys.stderr)
         except Exception as e:
-            print("Error: {}".format(e))
+            print("Error: {}".format(e), file=sys.stderr)
 
 if __name__ == "__main__":
     main()

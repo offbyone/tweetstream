@@ -1,5 +1,12 @@
 stream:
   build: stream
-
+  name: stream
+  restart: always
+  links:
+    - stash
+  env_file: .tweet_env
 stash:
   build: stash
+  container_name: stash
+  restart: always
+  env_file: .cw_env

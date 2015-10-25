@@ -1,0 +1,17 @@
+#!/bin/sh
+
+set -e
+SVC=$1; shift
+PORT=$1; shift
+
+host=$(env | grep ${SVC}_PORT_${PORT}_TCP_ADDR | cut -d = -f 2)
+port=$(env | grep ${SVC}_PORT_${PORT}_TCP_PORT | cut -d = -f 2)
+
+echo -n "waiting for TCP connection to $host:$port..."
+while ! nc -w 1 $host $port 2>/dev/null
+do
+  echo -n .
+  sleep 1
+done
+
+echo "ok: $host:$port"
