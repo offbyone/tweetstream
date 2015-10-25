@@ -11,6 +11,9 @@ def auth(consumer_secret, access_token_secret):
     auth.set_access_token(ACCESS_TOKEN, access_token_secret)
     return auth
 
+# emit status to stderr because stdout is going to cloudwatch
+status = sys.stderr
+
 class StreamListener(tweepy.StreamListener):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -20,7 +23,7 @@ class StreamListener(tweepy.StreamListener):
         print(tweet._json)
         self.sent += 1
         if self.sent % 10 == 1:
-            print("Emitted {} tweets total".format(self.sent), file=sys.stderr)
+            print("Emitted {} tweets total".format(self.sent), file=status)
 
     def on_error(self, status_code):
         print( 'Error: ' + repr(status_code))
@@ -30,7 +33,7 @@ class StreamListener(tweepy.StreamListener):
             print("Backing off.")
             time.sleep(60 * 2) # sleep for 2 mins.
         elif 400 <= status_code < 500:
-            print("Bailing due to {}".format(status_code), file=sys.stderr)
+            print("Bailing due to {}".format(status_code), file=status)
             sys.exit(1)
 
         return False
@@ -40,15 +43,15 @@ def main():
     consumer_secret, access_token_secret = os.environ['CONSUMER_SECRET'], os.environ['ACCESS_TOKEN_SECRET']
     api_auth = auth(consumer_secret, access_token_secret)
     keywords = os.environ.get("TRACK_KEYWORDS", "rossi").split(",")
-    print("Tracking keywords: {}".format(keywords), file=sys.stderr)
+    print("Tracking keywords: {}".format(keywords), file=status)
     while 1:
         try:
             l = StreamListener()
-            print("Starting to listen using {}:{}".format(l, api_auth), file=sys.stderr)
+            print("Starting to listen using {}:{}".format(l, api_auth), file=status)
             streamer = tweepy.Stream(auth=api_auth, listener=l)
             streamer.filter(track = keywords)
         except KeyboardInterrupt:
-            print("Exit requested", file=sys.stderr)
+            print("Exit requested", file=status)
             sys.exit(0)
         except SystemExit:
             raise
@@ -57,9 +60,10 @@ def main():
                 # EPIPE error
                 raise
             else:
-                print("IOError: {}".format(e), file=sys.stderr)
+                print("IOError: {}".format(e), file=status)
         except Exception as e:
-            print("Error: {}".format(e), file=sys.stderr)
+            print("Error: {}".format(e), file=status)
+        print("Looping again", file=status)
 
 if __name__ == "__main__":
     main()

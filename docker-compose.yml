@@ -1,6 +1,6 @@
 stream:
   build: stream
-  name: stream
+  container_name: stream
   restart: always
   links:
     - stash
