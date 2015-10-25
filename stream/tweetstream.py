@@ -38,18 +38,47 @@ class StreamListener(tweepy.StreamListener):
 
         return False
 
+DEFAULT_KEYWORDS = [
+    'quake',
+    'earthquake',
+    'magnitude',
+    'richter',
+    'tsunami',
+    'seismic',
+]
+
+DEFAULT_USERS = [
+    37534994,
+    94119095,
+    1148387713,
+    2417085025,
+    20953901,
+    16664681,
+    12804312
+]
+
+        streamer.filter(track = keywords, follow=users)
 
 def main():
     consumer_secret, access_token_secret = os.environ['CONSUMER_SECRET'], os.environ['ACCESS_TOKEN_SECRET']
     api_auth = auth(consumer_secret, access_token_secret)
-    keywords = os.environ.get("TRACK_KEYWORDS", "rossi").split(",")
+    if 'TRACK_KEYWORDS' in os.environ:
+        keywords = os.environ["TRACK_KEYWORDS"].split(",")
+    else:
+        keywords = DEFAULT_KEYWORDS
+
+    if 'TRACK_USERS' in os.environ:
+        users = os.environ["TRACK_USERS"].split(",")
+    else:
+        users = [str(u) for u in DEFAULT_USERS]
     print("Tracking keywords: {}".format(keywords), file=status)
+    print("Tracking users: {}".format(users), file=status)
     while 1:
         try:
             l = StreamListener()
             print("Starting to listen using {}:{}".format(l, api_auth), file=status)
             streamer = tweepy.Stream(auth=api_auth, listener=l)
-            streamer.filter(track = keywords)
+            streamer.filter(track=keywords, follow=users)
         except KeyboardInterrupt:
             print("Exit requested", file=status)
             sys.exit(0)
