@@ -57,8 +57,6 @@ DEFAULT_USERS = [
     12804312
 ]
 
-        streamer.filter(track = keywords, follow=users)
-
 def main():
     consumer_secret, access_token_secret = os.environ['CONSUMER_SECRET'], os.environ['ACCESS_TOKEN_SECRET']
     api_auth = auth(consumer_secret, access_token_secret)
