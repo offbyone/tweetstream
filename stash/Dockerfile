@@ -8,4 +8,4 @@ RUN /opt/logstash/bin/plugin install logstash-output-cloudwatchlogs
 ADD logstash.conf /config-dir/logstash.conf
 RUN apt-get -y install netcat
 EXPOSE 4444
-CMD /opt/logstash/bin/logstash --debug -f /config-dir/logstash.conf
+CMD /opt/logstash/bin/logstash --verbose -f /config-dir/logstash.conf
