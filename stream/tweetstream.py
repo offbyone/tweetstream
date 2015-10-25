@@ -26,11 +26,11 @@ class StreamListener(tweepy.StreamListener):
             print("Emitted {} tweets total".format(self.sent), file=status)
 
     def on_error(self, status_code):
-        print( 'Error: ' + repr(status_code))
+        print( 'Error: ' + repr(status_code), file=status)
         if status_code == 420:
             # sleep for a minute to back off.
             import time
-            print("Backing off.")
+            print("Backing off.", file=status)
             time.sleep(60 * 2) # sleep for 2 mins.
         elif 400 <= status_code < 500:
             print("Bailing due to {}".format(status_code), file=status)
