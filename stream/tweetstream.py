@@ -4,6 +4,7 @@ import sys
 import errno
 import encoding_fix
 import tweepy
+import boto3
 
 from twitter_authentication import CONSUMER_KEY, ACCESS_TOKEN
 
@@ -16,13 +17,22 @@ def auth(consumer_secret, access_token_secret):
 status = sys.stderr
 
 class StreamListener(tweepy.StreamListener):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, metrics, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.sent = 0
+        self.metrics = metrics
 
     def on_status(self, tweet):
         print(tweet._json)
         self.sent += 1
+        self.metrics.put_metric_data(
+            Namespace="TweetstreamMetricNamespace",
+            MetricData=[{
+                'MetricName': "Tweets",
+                "Value": 1,
+                "Unit": "Count",
+            }]
+        )
         if self.sent % 10 == 1:
             print("Emitted {} tweets total".format(self.sent), file=status)
 
@@ -30,6 +40,14 @@ class StreamListener(tweepy.StreamListener):
         print( 'Error: ' + repr(status_code), file=status)
         if status_code == 420:
             # sleep for a minute to back off.
+            self.metrics.put_metric_data(
+                Namespace="TweetstreamMetricNamespace",
+                MetricData=[{
+                    'MetricName': "Backoffs",
+                    'Value': 1,
+                    'Unit': 'Count',
+                }]
+            )
             import time
             print("Backing off.", file=status)
             time.sleep(60 * 2) # sleep for 2 mins.
@@ -61,6 +79,8 @@ DEFAULT_USERS = [
 def main():
     consumer_secret, access_token_secret = os.environ['CONSUMER_SECRET'], os.environ['ACCESS_TOKEN_SECRET']
     api_auth = auth(consumer_secret, access_token_secret)
+    metrics_client = boto3.client("cloudwatch")
+
     if 'TRACK_KEYWORDS' in os.environ:
         keywords = os.environ["TRACK_KEYWORDS"].split(",")
     else:
@@ -74,7 +94,7 @@ def main():
     print("Tracking users: {}".format(users), file=status)
     while 1:
         try:
-            l = StreamListener()
+            l = StreamListener(metrics_client)
             print("Starting to listen using {}:{}".format(l, api_auth), file=status)
             streamer = tweepy.Stream(auth=api_auth, listener=l)
             streamer.filter(track=keywords, follow=users)
