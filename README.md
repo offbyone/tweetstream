@@ -38,4 +38,4 @@ Run `docker-compose build` in the directory that contains
 Run `docker-compose up -d` in the same directory
 
 At this point, your streamer should be running; if you check your
-cloudwatch logs console,
+cloudwatch logs console, you'll start to see entries. If you want to see what's going on in the streamer itself, you can run `docker-compose logs` to tail the stdout/stderr of the two containers.
