@@ -2,6 +2,7 @@
 import os
 import sys
 import errno
+import json
 import encoding_fix
 import tweepy
 import boto3
@@ -23,7 +24,7 @@ class StreamListener(tweepy.StreamListener):
         self.metrics = metrics
 
     def on_status(self, tweet):
-        print(tweet._json)
+        print(json.dumps(tweet._json))
         self.sent += 1
         self.metrics.put_metric_data(
             Namespace="TweetstreamMetricNamespace",
