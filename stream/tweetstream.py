@@ -3,9 +3,11 @@ import os
 import sys
 import errno
 import json
+import argparse
+import boto3
+
 import encoding_fix
 import tweepy
-import boto3
 
 from twitter_authentication import CONSUMER_KEY, ACCESS_TOKEN
 
