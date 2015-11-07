@@ -1,4 +1,7 @@
 Tweet stream aggregator.
+------------------------
+
+**Setup**
 
 Takes in a set of twitter users and search terms, and streams those to
 Cloudwatch Logs.
@@ -40,4 +43,23 @@ Run `docker-compose up -d` in the same directory
 At this point, your streamer should be running; if you check your
 cloudwatch logs console, you'll start to see entries. If you want to see what's going on in the streamer itself, you can run `docker-compose logs` to tail the stdout/stderr of the two containers.
 
+**Download and prep**
+
+Use the programs in `subsample` to get a set of tweets suitable for students. First, modify `--log-group-name` and `--log-stream-name` (in two places each) and `--start-time` in one place so that your time and stream are tracked. Also, modify `profile` on line 3 to use your profile (which was stored in `~/.aws/credentials` for me). Run the program as:
+
+```
+bash download-tweets.sh local_file.json
+```
+
+Optionally, use `downsample_tweets.py` to downsample the tweets to a suitable size:
+
+```
+python downsample_tweets.py 0.01 somesalt < full_tweets.json > sample_tweets.json
+```
+
+The sample would give a 1% sample by account. Use the salt to produce different samples if you need it.
+
+**Teaching**
+
+There is a sample program and the normal CDSW "fix Powershell unicode issues" boilerplate in `/student`. A sample less is (http://wiki.communitydata.cc/Twitter_analysis_%28CDSW%29)[here]
 
